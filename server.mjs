@@ -1,4 +1,5 @@
 import express from "express";
+import { body, validationResult, matchedData } from "express-validator";
 
 const app = express();
 
@@ -68,6 +69,31 @@ var userData = [
 
 app.use(express.json());
 
+const testMiddleWare = (req, res, next) => {
+  console.log("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+  next();
+};
+
+const validateUserData = (req, res, next) => {
+  console.log("middle ware");
+  const {
+    params: { id },
+  } = req;
+  const parsedId = parseInt(id);
+
+  if (isNaN(parsedId)) return res.sendStatus(400);
+
+  const userIndex = userData.findIndex((user) => user.id === parsedId);
+
+  if (userIndex === -1) return res.sendStatus(404);
+
+  req.userIndex = userIndex;
+
+  next();
+};
+
+app.use(testMiddleWare);
+
 app.get("/", (req, res) => {
   res.status(200).send({ msg: "HELLO" });
 });
@@ -93,57 +119,59 @@ app.get("/api/users", (req, res) => {
   res.status(201).send(userData);
 });
 
-app.post("/api/addData", (req, res) => {
-  const { name, age, email } = req.body;
-  if (name && age && email) {
+app.post(
+  "/api/addData",
+  [
+    body("name")
+      .isString()
+      .withMessage("Name should be string")
+      .notEmpty()
+      .withMessage("Name must be given")
+      .isLength({ min: 5, max: 15 }),
+    body("age")
+      .isNumeric()
+      .withMessage("Age should be numeric")
+      .notEmpty()
+      .withMessage("Age should be given")
+      .isInt({ min: 10, max: 25 })
+      .withMessage("Age should be in the range 10 - 25"),
+    body("email").notEmpty().withMessage("Email should be entered"),
+  ],
+  (req, res) => {
+    const result = validationResult(req);
+
+
+    if (!result.isEmpty()) {
+      return res.status(400).send({ error: result.array() });
+    }
+
+    const { name, age, email } = req.body;
+
     const newUser = {
       id: userData.length + 1,
-      name: name,
-      age: age,
-      email: email,
+      name,
+      age,
+      email,
     };
+
     userData.push(newUser);
 
-    res.sendStatus(201);
+    return res.sendStatus(201); 
   }
+);
 
-  res.sendStatus(400);
-});
-
-app.put("/api/updateData/:id", (req, res) => {
-  const {
-    body,
-    params: { id },
-  } = req;
-  console.log(req);
-  const parsedId = parseInt(id);
-
-  if (isNaN(parsedId)) return res.sendStatus(400);
-
-  const userIndex = userData.findIndex((user) => user.id === parsedId);
-
-  if (userIndex === -1) return res.sendStatus(404);
+app.put("/api/updateData/:id", validateUserData, (req, res) => {
+  const { body, userIndex } = req;
 
   userData[userIndex] = {
-    id: parsedId,
+    id: userData[userIndex].id,
     ...body,
   };
   res.status(200).send({ status: "ok", msg: "Updated" });
 });
 
-app.patch("/api/updateData/:id", (req, res) => {
-  const {
-    body,
-    params: { id },
-  } = req;
-  console.log(req);
-  const parsedId = parseInt(id);
-
-  if (isNaN(parsedId)) return res.sendStatus(400);
-
-  const userIndex = userData.findIndex((user) => user.id === parsedId);
-
-  if (userIndex === -1) return res.sendStatus(404);
+app.patch("/api/updateData/:id", validateUserData, (req, res) => {
+  const { body, userIndex } = req;
 
   userData[userIndex] = {
     ...userData[userIndex],
@@ -152,14 +180,8 @@ app.patch("/api/updateData/:id", (req, res) => {
   res.status(200).send({ status: "ok", msg: "Updated" });
 });
 
-app.delete("/api/deleteData/:id", (req, res) => {
-  const {
-    params: { id },
-  } = req;
-  const parsedId = parseInt(id);
-  if (isNaN(parsedId)) return res.sendStatus(400);
-  const userIndex = userData.findIndex((user) => user.id === parsedId);
-  if (userIndex === -1) return res.sendStatus(404);
+app.delete("/api/deleteData/:id", validateUserData, (req, res) => {
+  const { userIndex } = req;
 
   userData.splice(userIndex, 1);
   return res.sendStatus(200);
