@@ -96,6 +96,34 @@ const deleteData = (req, res) => {
   return res.sendStatus(200);
 };
 
+const authenticateData = (req, res) => {
+  const {
+    body: { userName, email },
+  } = req;
+  const findData = userData.find((data) => data.name === userName);
+
+  if (!userName || !email || findData.email !== email) {
+    return res.status(401).send({ msg: "Send Valid Data" });
+  }
+  req.session.user = findData;
+  res.status(200).send({ msg: "ok", data: findData });
+};
+
+const checkData = (req, res) => {
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    if (err) {
+      console.log(err);
+      throw err;
+    } else {
+      console.log("sessionData");
+      console.log(sessionData);
+    }
+  });
+  return req.session.user
+    ? res.status(200).send({ msg: req.session.user })
+    : res.status(400).send({ msg: "No Session is created" });
+};
+
 export {
   addData,
   completeDataUpdate,
@@ -103,4 +131,6 @@ export {
   deleteData,
   allData,
   dataFromParams,
+  authenticateData,
+  checkData,
 };

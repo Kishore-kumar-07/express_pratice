@@ -9,6 +9,8 @@ import {
   deleteData,
   allData,
   dataFromParams,
+  authenticateData,
+  checkData,
 } from "../controller/userController.mjs";
 
 const router = Router();
@@ -21,5 +23,7 @@ router
   .put(validateUserData, completeDataUpdate)
   .patch(validateUserData, partialDataUpdate)
   .delete(validateUserData, deleteData);
+
+router.route("/api/auth/users").post(authenticateData).get(checkData);
 
 export default router;
