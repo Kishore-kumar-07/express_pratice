@@ -6,8 +6,18 @@ const allData = (req, res) => {
   console.log(req.headers.cookie);
   console.log(req.cookies);
   console.log(req.signedCookies.key);
-  if(!req.signedCookies.key || !req.signedCookies.key === "value"){
-    return res.status(400).send({msg : "No Cookie"})
+  console.log(req.session);
+  console.log(req.sessionID);
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    if (err) {
+      console.log(err);
+      throw err;
+    }
+    console.log("Session Data");
+    console.log(sessionData);
+  });
+  if (!req.signedCookies.key || !req.signedCookies.key === "value") {
+    return res.status(400).send({ msg: "No Cookie" });
   }
   const { col, val } = req.query;
   if (col && val) {
@@ -15,9 +25,13 @@ const allData = (req, res) => {
       return user[col]?.toString().toLowerCase().includes(val.toLowerCase());
     });
 
-    return res.status(201).send({ data: users, cookie: req.cookies });
+    return res.status(201).send({ data: users, cookie: req.signedCookies });
   }
-  res.status(201).send({ data: userData, cookie: req.cookies });
+  res.status(201).send({
+    data: userData,
+    cookie: req.signedCookies,
+    session: req.sessionID,
+  });
 };
 //get Method
 const dataFromParams = (req, res) => {
