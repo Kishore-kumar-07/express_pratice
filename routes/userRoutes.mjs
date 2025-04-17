@@ -11,7 +11,9 @@ import {
   dataFromParams,
   authenticateData,
   checkData,
+  aunthtiCatedDetail,
 } from "../controller/userController.mjs";
+import { validateUser } from "../middleware/authenticationMiddleware.mjs";
 
 const router = Router();
 
@@ -25,5 +27,7 @@ router
   .delete(validateUserData, deleteData);
 
 router.route("/api/auth/users").post(authenticateData).get(checkData);
+
+router.get("/api/auth/jwt", validateUser, aunthtiCatedDetail);
 
 export default router;

@@ -18,7 +18,7 @@ app.use(
     saveUninitialized: false,
     resave: false,
     cookie: {
-      maxAge: 60000 * 60 ,
+      maxAge: 60000 * 60,
     },
   })
 );
@@ -30,7 +30,7 @@ app.use(userRouter);
 app.get("/", (req, res) => {
   // console.log(req.session);
   // console.log(req.sessionID);
-  req.session.visited = true
+  req.session.visited = true;
   res.cookie("key", "value", { maxAge: 60000 * 60, signed: true });
   res.status(200).send({ msg: "HELLO" });
 });

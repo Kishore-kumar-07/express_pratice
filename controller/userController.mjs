@@ -1,5 +1,8 @@
 import { validationResult, matchedData, cookie } from "express-validator";
 import { userData } from "../utils/constants.mjs";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 //get Method
 const allData = (req, res) => {
@@ -63,7 +66,13 @@ const addData = (req, res) => {
 
   userData.push(newUser);
 
-  return res.status(201).send({ status: "ok", data: data });
+  const token = jwt.sign(newUser, process.env.ACCESS_TOKEN, {
+    expiresIn: "1h",
+  });
+
+  res.cookie("token", token, { maxAge: 60000 * 60 });
+
+  return res.status(201).send({ status: "ok", data: data, token: token });
 };
 
 //put Method
@@ -124,6 +133,10 @@ const checkData = (req, res) => {
     : res.status(400).send({ msg: "No Session is created" });
 };
 
+const aunthtiCatedDetail = (req, res) => {
+  res.status(200).send({ data: req.user });
+};
+
 export {
   addData,
   completeDataUpdate,
@@ -133,4 +146,5 @@ export {
   dataFromParams,
   authenticateData,
   checkData,
+  aunthtiCatedDetail,
 };
